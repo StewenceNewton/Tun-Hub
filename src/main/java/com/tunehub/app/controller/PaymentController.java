@@ -3,17 +3,19 @@ package com.tunehub.app.controller;
 
 
 import org.json.JSONObject;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.tunehub.app.entities.Users;
 import com.tunehub.app.services.UserServices;
-
+import com.razorpay.Utils;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -26,6 +28,23 @@ public class PaymentController {
 	{
 		return "pay";
 	}
+	
+	@GetMapping("/payment-success")
+	public String paymentSuccess(HttpSession session) 
+	{
+		String mail =  (String) session.getAttribute("email");
+		Users u = service.getUser(mail);
+		u.setPremium(true);
+		service.updateUser(u);
+		return "customerHome";
+	}
+	
+	@GetMapping("/payment-failure")
+	public String paymentFailure() 
+	{
+		return "customerHome";
+	}
+	
 
 	@SuppressWarnings("finally")
 	@PostMapping("/createOrder")
@@ -56,5 +75,24 @@ public class PaymentController {
 		finally {
 			return order.toString();
 		}
-	}	
+	}
+	
+	@PostMapping("/verify")
+	@ResponseBody
+	public boolean verifyPayment(@RequestParam  String orderId, @RequestParam String paymentId, @RequestParam String signature) {
+	    try {
+	        // Initialize Razorpay client with your API key and secret
+	        RazorpayClient razorpayClient = new RazorpayClient("rzp_test_lCbuEQdccurDVT", "yK3kzTik54YRq5GfMBMe8xwy");
+	        // Create a signature verification data string
+	        String verificationData = orderId + "|" + paymentId;
+
+	        // Use Razorpay's utility function to verify the signature
+	        boolean isValidSignature = Utils.verifySignature(verificationData, signature, "yK3kzTik54YRq5GfMBMe8xwy");
+
+	        return isValidSignature;
+	    } catch (RazorpayException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
 }

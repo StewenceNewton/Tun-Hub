@@ -21,79 +21,66 @@
 </div>
 
 <script>
-$(document).ready(function() 
-{
-    $(".buy-button").click(function(e) 
-    {
+$(document).ready(function() {
+    $(".buy-button").click(function(e) {
         e.preventDefault();
         var form = $(this).closest('form');
+        
+        
         createOrder();
     });
 });
 
-function createOrder() 
-{
+function createOrder() {
+	
     $.post("/createOrder")
-        .done(function(order) 
-        {
+        .done(function(order) {
             order = JSON.parse(order);
-            var options = 
-            {
-                "key": "rzp_test_pvGIc9JvXWZTVS",
+            var options = {
+                "key": "rzp_test_lCbuEQdccurDVT",
                 "amount": order.amount_due.toString(),
                 "currency": "INR",
                 "name": "Tune Hub",
                 "description": "Test Transaction",
                 "order_id": order.id,
-                "handler": function (response) 
-                {
+                "handler": function (response) {
                     verifyPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
                 },
-                "prefill": 
-                {
+                "prefill": {
                     "name": "Your Name",
                     "email": "test@example.com",
                     "contact": "9999999999"
                 },
-                "notes": 
-                {
+                "notes": {
                     "address": "Your Address"
                 },
-                "theme": 
-                {
+                "theme": {
                     "color": "#F37254"
                 }
             };
             var rzp1 = new Razorpay(options);
             rzp1.open();
         })
-        .fail(function(error) 
-        {
+        .fail(function(error) {
             console.error("Error:", error);
         });
 }
 
-	function verifyPayment(orderId, paymentId, signature) 
-    {
+function verifyPayment(orderId, paymentId, signature) {
      $.post("/verify", { orderId: orderId, paymentId: paymentId, signature: signature })
-         .done(function(isValid) 
-         {
-             if (isValid) 
-             {
+         .done(function(isValid) {
+             if (isValid) {
                  alert("Payment successful");
                  window.location.href = 'payment-success';
-             } 
-             else 
-             {
-                alert("Payment failed");
-                window.location.href = 'payment-failure';
+             } else {
+                 alert("Payment failed");
+                 window.location.href = 'payment-failure';
              }
          })
-         .fail(function(error) 
-         {
+         .fail(function(error) {
              console.error("Error:", error);
          });
-    }
+}
 </script>
 </body>
 </html>
